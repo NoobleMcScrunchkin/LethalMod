@@ -95,7 +95,7 @@ export default function ModList({ packages, onUpdate, error, loading, limit, tot
 							{loading
 								? [...Array(limit)].map((index) => <li key={index} className="h-16 p-2 gap-2 flex flex-row bg-white opacity-5 rounded-lg"></li>)
 								: packages.map((mod) => (
-										<li key={mod.name} className="h-16 p-2 gap-2 flex flex-row bg-background-tertiary rounded-lg">
+										<li key={mod.full_name} className="h-16 p-2 gap-2 flex flex-row bg-background-tertiary rounded-lg">
 											<div className="w-12 h-12">
 												<img src={mod.versions[0].icon ?? ""} className="aspect-square w-full h-full rounded bg-background-quaternary" />
 											</div>
