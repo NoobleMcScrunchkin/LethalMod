@@ -16,8 +16,14 @@ const GET_PACKAGES = gql(`
         donation_link
         date_created
         date_updated
+				downloads
+				categories
         versions {
           icon
+					version_number
+					description
+					full_name
+					dependencies
         }
       }
       total
@@ -35,11 +41,10 @@ export default function Dashboard() {
 	});
 
 	const handleUpdate = (search: string, page: number) => {
-		console.log("REFETCHING");
 		setLoading(true);
 
 		refetch({
-			search,
+			search: search.replace(/ /g, ""),
 			offset: 20 * page,
 			limit: 20,
 		}).then(() => {

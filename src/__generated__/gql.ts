@@ -13,7 +13,9 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  * Therefore it is highly recommended to use the babel or swc plugin for production.
  */
 const documents = {
-    "\n\tquery GET_PACKAGES($search: String, $offset: Int = 0, $limit: Int = 20) {\n\t\tpackages(search: $search, offset: $offset, limit: $limit) {\n      result {\n        name\n        owner\n        package_url\n        rating_score\n        full_name\n        has_nsfw_content\n        donation_link\n        date_created\n        date_updated\n        versions {\n          icon\n        }\n      }\n      total\n\t\t}\n\t}\n": types.Get_PackagesDocument,
+    "\n\tquery GET_PACKAGES($search: String, $offset: Int = 0, $limit: Int = 20) {\n\t\tpackages(search: $search, offset: $offset, limit: $limit) {\n      result {\n        name\n        owner\n        package_url\n        rating_score\n        full_name\n        has_nsfw_content\n        donation_link\n        date_created\n        date_updated\n\t\t\t\tdownloads\n\t\t\t\tcategories\n        versions {\n          icon\n\t\t\t\t\tversion_number\n\t\t\t\t\tdescription\n\t\t\t\t\tfull_name\n\t\t\t\t\tdependencies\n        }\n      }\n      total\n\t\t}\n\t}\n": types.Get_PackagesDocument,
+    "\n  query GET_BEPINEX_LINK {\n    packages(search: \"BepInEx-BepInExPack\") {\n      result {\n        versions {\n          download_url\n        }\n        full_name\n      }\n    }\n  }\n": types.Get_Bepinex_LinkDocument,
+    "\n  query GET_MOD_QUEUE($full_name: String!) {\n    dependencyList(full_name: $full_name) {\n      packages {\n        name\n        full_name\n        dependencies\n        description\n        download_url\n\t\t\t\tversion_number\n\t\t\t\twebsite_url\n        file_size\n        icon\n      }\n      missing\n    }\n  }\n": types.Get_Mod_QueueDocument,
 };
 
 /**
@@ -33,7 +35,15 @@ export function gql(source: string): unknown;
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function gql(source: "\n\tquery GET_PACKAGES($search: String, $offset: Int = 0, $limit: Int = 20) {\n\t\tpackages(search: $search, offset: $offset, limit: $limit) {\n      result {\n        name\n        owner\n        package_url\n        rating_score\n        full_name\n        has_nsfw_content\n        donation_link\n        date_created\n        date_updated\n        versions {\n          icon\n        }\n      }\n      total\n\t\t}\n\t}\n"): (typeof documents)["\n\tquery GET_PACKAGES($search: String, $offset: Int = 0, $limit: Int = 20) {\n\t\tpackages(search: $search, offset: $offset, limit: $limit) {\n      result {\n        name\n        owner\n        package_url\n        rating_score\n        full_name\n        has_nsfw_content\n        donation_link\n        date_created\n        date_updated\n        versions {\n          icon\n        }\n      }\n      total\n\t\t}\n\t}\n"];
+export function gql(source: "\n\tquery GET_PACKAGES($search: String, $offset: Int = 0, $limit: Int = 20) {\n\t\tpackages(search: $search, offset: $offset, limit: $limit) {\n      result {\n        name\n        owner\n        package_url\n        rating_score\n        full_name\n        has_nsfw_content\n        donation_link\n        date_created\n        date_updated\n\t\t\t\tdownloads\n\t\t\t\tcategories\n        versions {\n          icon\n\t\t\t\t\tversion_number\n\t\t\t\t\tdescription\n\t\t\t\t\tfull_name\n\t\t\t\t\tdependencies\n        }\n      }\n      total\n\t\t}\n\t}\n"): (typeof documents)["\n\tquery GET_PACKAGES($search: String, $offset: Int = 0, $limit: Int = 20) {\n\t\tpackages(search: $search, offset: $offset, limit: $limit) {\n      result {\n        name\n        owner\n        package_url\n        rating_score\n        full_name\n        has_nsfw_content\n        donation_link\n        date_created\n        date_updated\n\t\t\t\tdownloads\n\t\t\t\tcategories\n        versions {\n          icon\n\t\t\t\t\tversion_number\n\t\t\t\t\tdescription\n\t\t\t\t\tfull_name\n\t\t\t\t\tdependencies\n        }\n      }\n      total\n\t\t}\n\t}\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  query GET_BEPINEX_LINK {\n    packages(search: \"BepInEx-BepInExPack\") {\n      result {\n        versions {\n          download_url\n        }\n        full_name\n      }\n    }\n  }\n"): (typeof documents)["\n  query GET_BEPINEX_LINK {\n    packages(search: \"BepInEx-BepInExPack\") {\n      result {\n        versions {\n          download_url\n        }\n        full_name\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  query GET_MOD_QUEUE($full_name: String!) {\n    dependencyList(full_name: $full_name) {\n      packages {\n        name\n        full_name\n        dependencies\n        description\n        download_url\n\t\t\t\tversion_number\n\t\t\t\twebsite_url\n        file_size\n        icon\n      }\n      missing\n    }\n  }\n"): (typeof documents)["\n  query GET_MOD_QUEUE($full_name: String!) {\n    dependencyList(full_name: $full_name) {\n      packages {\n        name\n        full_name\n        dependencies\n        description\n        download_url\n\t\t\t\tversion_number\n\t\t\t\twebsite_url\n        file_size\n        icon\n      }\n      missing\n    }\n  }\n"];
 
 export function gql(source: string) {
   return (documents as any)[source] ?? {};

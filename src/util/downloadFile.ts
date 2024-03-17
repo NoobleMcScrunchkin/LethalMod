@@ -1,15 +1,23 @@
 import { createDirIfNotExist } from "@/services/storage";
 import fetch from "node-fetch";
+import type { Response } from "node-fetch";
 import fs from "fs";
 
-async function downloadFile(url: string, path: string, fileName: string): Promise<void> {
+async function downloadFile(url: string, path: string, fileName?: string): Promise<string> {
 	createDirIfNotExist(path);
 
-	const filePath = `${path}/${fileName}`;
+	let res: Response | null = null;
 
-	console.log(url);
+	try {
+		res = await fetch(url, {});
+	} catch (err) {
+		console.log(err);
+		return null;
+	}
 
-	const res = await fetch(url);
+	const resFileName = res.url.split("/").pop();
+
+	const filePath = `${path}/${fileName ? fileName : resFileName}`;
 
 	const fileStream = fs.createWriteStream(filePath);
 
@@ -18,6 +26,8 @@ async function downloadFile(url: string, path: string, fileName: string): Promis
 		res.body.on("error", reject);
 		fileStream.on("finish", resolve);
 	});
+
+	return filePath;
 }
 
 export { downloadFile };

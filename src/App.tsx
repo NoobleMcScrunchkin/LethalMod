@@ -1,23 +1,19 @@
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client";
+import InstalledMods from "./pages/InstalledMods";
+import GetMods from "./pages/GetMods";
+import { ApolloProvider } from "@apollo/client";
 import "./index.css";
+import { client } from "./apollo";
 
-const client = new ApolloClient({
-	uri: "http://localhost:4000/api/graphql",
-	cache: new InMemoryCache(),
-});
-
-const root = createRoot(document.body);
+const root = createRoot(document.getElementById("react-root"));
 root.render(
-	<main className="bg-background-primary w-screen h-screen overflow-y-auto text-text-primary flex flex-col">
-		<ApolloProvider client={client}>
-			<HashRouter>
-				<Routes>
-					<Route path="/" element={<Dashboard />} />
-				</Routes>
-			</HashRouter>
-		</ApolloProvider>
-	</main>
+	<ApolloProvider client={client}>
+		<HashRouter>
+			<Routes>
+				<Route path="/" element={<InstalledMods />} />
+				<Route path="/getMods" element={<GetMods />} />
+			</Routes>
+		</HashRouter>
+	</ApolloProvider>
 );

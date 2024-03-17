@@ -1,19 +1,21 @@
-const colors = require("tailwindcss/colors");
+import { zinc } from "tailwindcss/colors";
 
-module.exports = {
+export default {
 	content: ["./src/**/*.{js,jsx,ts,tsx}"],
 	theme: {
 		extend: {
 			colors: {
-				primary: colors.blue["900"],
-				secondary: colors.zinc["100"],
-				"background-primary": colors.zinc["900"],
-				"background-secondary": colors.zinc["800"],
-				"background-tertiary": colors.zinc["700"],
-				"background-quaternary": colors.zinc["600"],
-				"text-primary": colors.zinc["100"],
-				"text-secondary": colors.zinc["200"],
-				"text-muted": colors.zinc["500"],
+				titlebar: zinc["900"],
+				highlight: zinc["600"],
+				primary: zinc["900"],
+				secondary: zinc["800"],
+				tertiary: zinc["700"],
+			},
+			textColor: {
+				primary: zinc["100"],
+				secondary: zinc["200"],
+				subtle: zinc["400"],
+				muted: zinc["500"],
 			},
 		},
 	},

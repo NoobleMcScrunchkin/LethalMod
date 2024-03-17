@@ -7,6 +7,7 @@ dotenv.config();
 interface AppConfig {
 	storage: {
 		storagePath: string;
+		profilesPath: string;
 		thunderstorePath: string;
 	};
 	graphql: {
@@ -20,6 +21,7 @@ function getAppConfig(): AppConfig {
 	return {
 		storage: {
 			storagePath,
+			profilesPath: path.join(storagePath, "profiles"),
 			thunderstorePath: path.join(storagePath, process.env.THUNDERSTORE_STORAGE_PATH),
 		},
 		graphql: {
