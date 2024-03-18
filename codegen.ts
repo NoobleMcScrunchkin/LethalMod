@@ -1,10 +1,8 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
-import * as dotenv from "dotenv";
-
-dotenv.config();
+import { config as appConfig } from "./src/util/config";
 
 const config: CodegenConfig = {
-	schema: process.env.GRAPHQL_API,
+	schema: appConfig.graphql.url,
 	documents: ["src/**/*.tsx", "src/**/*.ts"],
 	generates: {
 		"./src/__generated__/": {

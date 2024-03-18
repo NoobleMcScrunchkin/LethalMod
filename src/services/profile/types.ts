@@ -1,7 +1,6 @@
 interface Profile {
 	uuid: string;
 	name: string;
-	mods: Array<ModManifest>;
 	path: string;
 }
 
@@ -11,9 +10,16 @@ interface ModManifest {
 	description: string;
 	version_number: string;
 	dependencies: Array<string>;
+	categories: Array<string>;
 	website_url: string;
+	donation_url: string;
 	full_name: string;
 	icon: string;
+}
+
+interface ModManifestExtra extends ModManifest {
+	enabled: boolean;
+	path: string;
 }
 
 interface PackageVersion {
@@ -28,4 +34,4 @@ interface PackageVersion {
 	website_url: string;
 }
 
-export type { Profile, ModManifest, PackageVersion };
+export type { Profile, ModManifest, PackageVersion, ModManifestExtra };

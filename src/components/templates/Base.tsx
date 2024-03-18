@@ -1,7 +1,7 @@
 import { faAngleDown, faAngleUp, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ReactNode, useEffect, useRef } from "react";
-import Queue from "../Queue";
+import Queue from "./templatePieces/Queue";
+import TitlebarButton from "./templatePieces/TitlebarButton";
 
 interface BaseTemplateProps {
 	children: ReactNode;
@@ -11,14 +11,8 @@ interface BaseTemplateProps {
 export default function BaseTemplate({ children, title }: BaseTemplateProps) {
 	const mainRef = useRef(null);
 
-	const minimize = () => {
-		ipcRenderer.send("MINIMIZE");
-	};
-	const maximize = () => {
-		ipcRenderer.send("MAXIMIZE");
-	};
-	const close = () => {
-		ipcRenderer.send("CLOSE");
+	const send = (event: "MINIMIZE" | "MAXIMIZE" | "CLOSE") => {
+		ipcRenderer.send(event);
 	};
 
 	useEffect(() => {
@@ -33,15 +27,24 @@ export default function BaseTemplate({ children, title }: BaseTemplateProps) {
 				</div>
 				<div className="flex flex-row [-webkit-app-region:no-drag;]">
 					<Queue mainRef={mainRef} />
-					<div onClick={minimize} className="w-6 h-6 text-center hover:bg-highlight">
-						<FontAwesomeIcon icon={faAngleDown} color="currentColor" />
-					</div>
-					<div onClick={maximize} className="w-6 h-6 text-center hover:bg-highlight">
-						<FontAwesomeIcon icon={faAngleUp} color="currentColor" />
-					</div>
-					<div onClick={close} className="w-6 h-6 text-center hover:bg-red-500">
-						<FontAwesomeIcon icon={faXmark} color="currentColor" />
-					</div>
+					<TitlebarButton
+						onClick={() => {
+							send("MINIMIZE");
+						}}
+						icon={faAngleDown}
+					/>
+					<TitlebarButton
+						onClick={() => {
+							send("MAXIMIZE");
+						}}
+						icon={faAngleUp}
+					/>
+					<TitlebarButton
+						onClick={() => {
+							send("CLOSE");
+						}}
+						icon={faXmark}
+					/>
 				</div>
 			</div>
 			<main ref={mainRef} className="bg-primary w-screen grow overflow-y-auto text-primary flex flex-col relative">

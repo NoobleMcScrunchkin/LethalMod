@@ -1,10 +1,13 @@
-import AvailableModList from "../components/AvailableModList";
+import { ThunderModsProvider } from "../components/context/ThunderMods";
+import AvailableModList from "../components/pages/AvailableModList";
 import WithSidebar from "../components/templates/WithSidebar";
 
 export default function GetMods() {
 	return (
 		<WithSidebar>
-			<AvailableModList />
+			<ThunderModsProvider>
+				<AvailableModList />
+			</ThunderModsProvider>
 		</WithSidebar>
 	);
 }

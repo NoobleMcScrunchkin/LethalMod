@@ -1,6 +1,7 @@
 import { app, BrowserWindow, session } from "electron";
 import ModInstallerQueue from "./profile/modQueue";
 import "./events";
+import { config } from "@/util/config";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
@@ -9,8 +10,12 @@ export class Browser {
 	static mainWindow: BrowserWindow | null = null;
 
 	static async createWindow(): Promise<void> {
-		await session.defaultSession.loadExtension("C:/Users/riley/AppData/Local/Google/Chrome/User Data/Default/Extensions/jdkknkkbebbapilgoeccciglkfbmbnfm/4.9.0_0");
-		await session.defaultSession.loadExtension("C:/Users/riley/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/5.0.2_2");
+		console.log("Dev:", config.isDev);
+
+		if (config.isDev) {
+			await session.defaultSession.loadExtension("C:/Users/riley/AppData/Local/Google/Chrome/User Data/Default/Extensions/jdkknkkbebbapilgoeccciglkfbmbnfm/4.9.0_0");
+			await session.defaultSession.loadExtension("C:/Users/riley/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/5.0.2_2");
+		}
 
 		Browser.mainWindow = new BrowserWindow({
 			height: 600,
@@ -25,7 +30,9 @@ export class Browser {
 
 		Browser.mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-		Browser.mainWindow.webContents.openDevTools();
+		if (config.isDev) {
+			Browser.mainWindow.webContents.openDevTools();
+		}
 
 		Browser.mainWindow.on("closed", () => {
 			Browser.mainWindow = null;

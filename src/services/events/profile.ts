@@ -22,3 +22,15 @@ ipcMain.handle("GET_PROFILE", (_, uuid: string) => {
 ipcMain.handle("LAUNCH_GAME", () => {
 	return launchGame(ProfileManager.currentProfile);
 });
+
+ipcMain.handle("GET_MODS", (_, search: string) => {
+	return ProfileManager.getMods(search);
+});
+
+ipcMain.handle("SET_MOD_ENABLED", (_, path: string, enabled: boolean) => {
+	return ProfileManager.setModEnabled(path, enabled);
+});
+
+ipcMain.handle("UNINSTALL_MOD", (_, full_name: string) => {
+	return ProfileManager.uninstallMod(full_name);
+});

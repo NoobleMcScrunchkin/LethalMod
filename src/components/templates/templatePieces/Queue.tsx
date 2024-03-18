@@ -1,8 +1,8 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { PackageVersion } from "../services/profile/types";
+import { PackageVersion } from "../../../services/profile/types";
 import { useEffect, useState } from "react";
 import { faCog } from "@fortawesome/free-solid-svg-icons";
-import { formatBytes } from "../util/formatBytes";
+import { formatBytes } from "../../../util/formatBytes";
+import TitlebarButton from "./TitlebarButton";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -60,15 +60,13 @@ export default function Queue({ mainRef }: { mainRef: React.RefObject<HTMLDivEle
 
 	return (
 		<>
-			<button
-				className="hover:bg-hover cursor-pointer"
+			<TitlebarButton
+				icon={faCog}
+				iconProps={{ spin: queue.length > 0 }}
 				onClick={() => {
 					setOpen(!open);
-				}}>
-				<div className="w-6 h-6">
-					<FontAwesomeIcon icon={faCog} spin={queue.length > 0} />
-				</div>
-			</button>
+				}}
+			/>
 			{open ? <QueueList queue={queue} /> : null}
 		</>
 	);

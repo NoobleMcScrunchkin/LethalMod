@@ -3,9 +3,10 @@ import { createDirIfNotExist } from "../storage";
 import path from "path";
 import fs from "fs/promises";
 import { existsSync } from "fs";
-import { ModManifest, Profile } from "./types";
+import { ModManifest, ModManifestExtra, Profile } from "./types";
 import { v4 } from "uuid";
 import { installBepInEx } from "./bepinex";
+import { objectContains } from "@/util/objectContains";
 
 const { profilesPath } = config.storage;
 
@@ -27,46 +28,29 @@ function toProfileSave(profile: Partial<Profile>, initial: ProfileSave = default
 const defaultProfile: Profile = {
 	uuid: "",
 	name: "",
-	mods: [],
 	path: "",
 };
 
 async function fromProfileSave(profile: Partial<ProfileSave>, uuid: string): Promise<Profile> {
-	let mods: Array<ModManifest> = [];
-
 	const profilePath = path.join(profilesPath, uuid);
-
-	const pluginsPath = path.join(profilePath, "BepInEx", "plugins");
-
-	if (existsSync(pluginsPath)) {
-		const modFolders = await fs.readdir(pluginsPath);
-
-		mods = await Promise.all(
-			modFolders.map(async (modFolder) => {
-				const manifestPath = path.join(pluginsPath, modFolder, "manifest.json");
-
-				if (!existsSync(manifestPath)) {
-					return null;
-				}
-
-				const buffer = (await fs.readFile(manifestPath, "utf-8")).replace("\ufeff", "");
-
-				console.log(manifestPath);
-
-				const manifest: ModManifest = JSON.parse(buffer);
-
-				return manifest;
-			})
-		);
-	}
 
 	return {
 		...defaultProfile,
 		uuid: uuid,
 		name: profile.name,
-		mods,
 		path: profilePath,
 	};
+}
+
+async function uninstallMod(profile: Profile, full_name: string) {
+	const { path: profilePath } = profile;
+	const bepinexProfilePath = path.join(profilePath, "BepInEx");
+
+	const folderNameForFullName = full_name.split("-").slice(0, -1).join("-");
+
+	if (existsSync(path.join(bepinexProfilePath, "plugins", folderNameForFullName))) await fs.rm(path.join(bepinexProfilePath, "plugins", folderNameForFullName), { recursive: true });
+	if (existsSync(path.join(bepinexProfilePath, "core", folderNameForFullName))) await fs.rm(path.join(bepinexProfilePath, "core", folderNameForFullName), { recursive: true });
+	if (existsSync(path.join(bepinexProfilePath, "patcher", folderNameForFullName))) await fs.rm(path.join(bepinexProfilePath, "patcher", folderNameForFullName), { recursive: true });
 }
 
 class ProfileManager {
@@ -139,6 +123,90 @@ class ProfileManager {
 
 		return fromProfileSave(profileSave, profile.uuid);
 	}
+
+	static async getMods(search = "") {
+		const { uuid } = ProfileManager.currentProfile;
+
+		let mods: Array<ModManifestExtra> = [];
+
+		const profilePath = path.join(profilesPath, uuid);
+
+		const pluginsPath = path.join(profilePath, "BepInEx", "plugins");
+
+		if (existsSync(pluginsPath)) {
+			const modFolders = await fs.readdir(pluginsPath);
+
+			mods = await Promise.all(
+				modFolders.map(async (modFolder) => {
+					let manifestPath = path.join(pluginsPath, modFolder, "manifest.json");
+
+					let enabled = false;
+
+					if (!existsSync(manifestPath)) {
+						manifestPath = path.join(pluginsPath, modFolder, "manifest.json.disabled");
+
+						if (!existsSync(manifestPath)) {
+							return null;
+						}
+					} else {
+						enabled = true;
+					}
+
+					const buffer = (await fs.readFile(manifestPath, "utf-8")).replace("\ufeff", "");
+
+					const manifest: ModManifest = JSON.parse(buffer);
+
+					const modPath = path.join(pluginsPath, modFolder);
+
+					return { ...manifest, enabled, path: modPath };
+				})
+			);
+		}
+
+		const filtered = mods.filter((mod) => {
+			return objectContains(mod as unknown as Record<string, unknown>, search);
+		});
+
+		const sorted = filtered.sort((a, b) => {
+			return a.name.localeCompare(b.name);
+		});
+
+		return sorted;
+	}
+
+	static async setModEnabled(folderPath: string, enable: boolean) {
+		await toggleFileNames(folderPath, enable);
+		await toggleFileNames(folderPath.replace("plugins", "core"), enable);
+		await toggleFileNames(folderPath.replace("plugins", "patchers"), enable);
+	}
+
+	static async uninstallMod(full_name: string) {
+		console.log("Uninstalling:", full_name);
+		await uninstallMod(ProfileManager.currentProfile, full_name);
+		console.log("Done Uninstalling:", full_name);
+	}
+}
+
+async function toggleFileNames(folderPath: string, enable: boolean) {
+	if (!existsSync(folderPath)) return;
+
+	const filesFolders = await fs.readdir(folderPath);
+
+	await Promise.all(
+		filesFolders.map(async (file) => {
+			const current = path.join(folderPath, file);
+
+			const stat = await fs.lstat(current);
+
+			if (stat.isFile()) {
+				const newPath = enable ? current.replace(".disabled", "") : current + ".disabled";
+
+				await fs.rename(current, newPath);
+			} else {
+				await toggleFileNames(current, enable);
+			}
+		})
+	);
 }
 
 export default ProfileManager;

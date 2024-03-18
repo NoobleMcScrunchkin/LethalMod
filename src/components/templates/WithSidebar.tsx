@@ -1,9 +1,9 @@
-import { useNavigate } from "react-router-dom";
-import SidebarItem from "../SidebarItem";
+import { useNavigate, matchPath, useLocation } from "react-router-dom";
+import SidebarItem from "./templatePieces/SidebarItem";
 import Base from "./Base";
 import { faDownload, faPlayCircle, faWrench } from "@fortawesome/free-solid-svg-icons";
 import Spacer from "../Spacer";
-import SidebarCategory from "../SidebarCategory";
+import SidebarCategory from "./templatePieces/SidebarCategory";
 
 interface WithSidebarProperties {
 	children: React.ReactNode;
@@ -13,6 +13,7 @@ const { ipcRenderer } = window.require("electron");
 
 function SidebarItems() {
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	const launchGame = () => {
 		ipcRenderer.invoke("LAUNCH_GAME");
@@ -29,10 +30,10 @@ function SidebarItems() {
 			</SidebarItem>
 			<Spacer />
 			<SidebarCategory name="Mods">
-				<SidebarItem icon={faWrench} onClick={() => navigate("/")}>
+				<SidebarItem icon={faWrench} onClick={() => navigate("/")} highlight={matchPath("/", location.pathname) !== null}>
 					Installed Mods
 				</SidebarItem>
-				<SidebarItem icon={faDownload} onClick={() => navigate("/getMods")}>
+				<SidebarItem icon={faDownload} onClick={() => navigate("/getMods")} highlight={matchPath("/getMods", location.pathname) !== null}>
 					Get Mods
 				</SidebarItem>
 			</SidebarCategory>

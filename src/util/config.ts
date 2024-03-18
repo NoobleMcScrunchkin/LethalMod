@@ -3,7 +3,6 @@ import path from "path";
 import * as dotenv from "dotenv";
 
 dotenv.config();
-
 interface AppConfig {
 	storage: {
 		storagePath: string;
@@ -13,6 +12,7 @@ interface AppConfig {
 	graphql: {
 		url: string;
 	};
+	isDev: boolean;
 }
 
 function getAppConfig(): AppConfig {
@@ -22,11 +22,12 @@ function getAppConfig(): AppConfig {
 		storage: {
 			storagePath,
 			profilesPath: path.join(storagePath, "profiles"),
-			thunderstorePath: path.join(storagePath, process.env.THUNDERSTORE_STORAGE_PATH),
+			thunderstorePath: path.join(storagePath, "thunderstore"),
 		},
 		graphql: {
-			url: process.env.GRAPHQL_API,
+			url: "https://thunder.aslett.io/api/graphql",
 		},
+		isDev: process.env.APP_DEV === "true",
 	};
 }
 
