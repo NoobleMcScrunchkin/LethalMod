@@ -8,6 +8,8 @@ import { useQuery } from "@apollo/client";
 import { gql } from "../../__generated__/gql";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload } from "@fortawesome/free-solid-svg-icons";
+import { TryCatchReturnType } from "../../services/events/tryCatch";
+import { useErrorContext } from "../context/Error";
 
 const { shell, ipcRenderer } = window.require("electron");
 
@@ -20,14 +22,28 @@ const GET_UPDATES = gql(`
 `);
 
 function ModListItemGeneral({ pack, onClick, update }: { pack: ModManifestExtra; onClick: () => void; update: string }) {
+	const { setError } = useErrorContext();
 	const [versionOverride, setVersionOverride] = useState<string | null>(null);
 
-	const setModEnabled = (enable: boolean) => {
-		ipcRenderer.invoke("SET_MOD_ENABLED", pack.path, enable);
+	const setModEnabled = async (enable: boolean) => {
+		const data = (await ipcRenderer.invoke("SET_MOD_ENABLED", pack.path, enable)) as TryCatchReturnType<undefined>;
+
+		if (data.success === false) {
+			setError({ title: "Failed to update mod", message: data.error.message });
+			console.error(data.error);
+			return;
+		}
 	};
 
-	const updateMod = () => {
-		ipcRenderer.invoke("QUEUE_MOD", update);
+	const updateMod = async () => {
+		const data = (await ipcRenderer.invoke("QUEUE_MOD", update)) as TryCatchReturnType<undefined>;
+
+		if (data.success === false) {
+			setError({ title: "Failed to queue mod", message: data.error.message });
+			console.error(data.error);
+			return;
+		}
+
 		const split = update.split("-");
 		setVersionOverride(split[split.length - 1]);
 	};
@@ -112,11 +128,19 @@ function ModListItemDetails({ pack, uninstallMod }: { pack: ModManifestExtra; un
 }
 
 function ModListItem({ pack, open, onClick, update }: { pack: ModManifestExtra; open: boolean; onClick: () => void; update?: string }) {
+	const { setError } = useErrorContext();
 	const [uninstalled, setUninstalled] = useState(false);
 
-	const uninstallMod = () => {
-		ipcRenderer.invoke("UNINSTALL_MOD", pack.full_name);
-		setUninstalled(true);
+	const uninstallMod = async () => {
+		const data = (await ipcRenderer.invoke("UNINSTALL_MOD", pack.full_name)) as TryCatchReturnType<undefined>;
+
+		if (data.success === false) {
+			setError({ title: "Failed to uninstall mod", message: data.error.message });
+			console.error(data.error);
+			return;
+		} else {
+			setUninstalled(true);
+		}
 	};
 
 	if (uninstalled) return null;
@@ -130,6 +154,7 @@ function ModListItem({ pack, open, onClick, update }: { pack: ModManifestExtra; 
 }
 
 export default function ModList() {
+	const { setError } = useErrorContext();
 	const { packages, onUpdate, loading } = useLocalModsContext();
 
 	const [fetchedUpdates, setFetchedUpdates] = useState(false);
@@ -149,8 +174,14 @@ export default function ModList() {
 	}, [packages, fetchedUpdates]);
 
 	const updateMods = () => {
-		data?.updates.forEach((update) => {
-			ipcRenderer.invoke("QUEUE_MOD", update.full_name);
+		data?.updates.forEach(async (update) => {
+			const data = (await ipcRenderer.invoke("QUEUE_MOD", update.full_name)) as TryCatchReturnType<undefined>;
+
+			if (data.success === false) {
+				setError({ title: "Failed to queue mod", message: data.error.message });
+				console.error(data.error);
+				return;
+			}
 		});
 		setDownloadingUpdates(true);
 	};

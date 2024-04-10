@@ -1,4 +1,4 @@
-import { zinc } from "tailwindcss/colors";
+import { red, zinc } from "tailwindcss/colors";
 
 export default {
 	content: ["./src/**/*.{js,jsx,ts,tsx}"],
@@ -10,6 +10,7 @@ export default {
 				primary: zinc["900"],
 				secondary: zinc["800"],
 				tertiary: zinc["700"],
+				error: red["500"],
 			},
 			textColor: {
 				primary: zinc["100"],

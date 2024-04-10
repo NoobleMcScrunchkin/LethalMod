@@ -11,14 +11,12 @@ import { extractAllTo } from "@/util/extract";
 
 const GET_BEPINEX_LINK = gql(`
   query GET_BEPINEX_LINK {
-    packages(search: "BepInEx-BepInExPack") {
-      result {
-        versions {
-          download_url
-        }
-        full_name
-      }
-    }
+		bepinex {
+			versions {
+				download_url
+			}
+			full_name
+		}
   }
 `);
 
@@ -28,7 +26,11 @@ async function installBepInEx(profilePath: string) {
 	const { storagePath } = config.storage;
 	const { data } = await client.query({ query: GET_BEPINEX_LINK });
 
-	const { versions } = data.packages.result.find((pack) => pack.full_name === "BepInEx-BepInExPack");
+	if (!data.bepinex) {
+		return false;
+	}
+
+	const { versions } = data.bepinex;
 
 	const dlPath = path.join(storagePath, "BepInEx");
 	const fileName = "BepInEx.zip";

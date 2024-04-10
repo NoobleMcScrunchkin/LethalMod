@@ -13,7 +13,7 @@ export default function SidebarItem({ icon, children, onClick, highlight = false
 	return (
 		<div className={`w-full h-8 hover:bg-highlight flex flex-row p-1 ps-4 gap-2 cursor-pointer ${highlight ? "bg-tertiary" : ""}`} onClick={onClick}>
 			{icon ? (
-				<div>
+				<div className="w-6 text-center">
 					<FontAwesomeIcon icon={icon} />
 				</div>
 			) : null}

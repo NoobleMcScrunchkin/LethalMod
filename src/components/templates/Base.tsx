@@ -2,6 +2,8 @@ import { faAngleDown, faAngleUp, faXmark } from "@fortawesome/free-solid-svg-ico
 import { ReactNode, useEffect, useRef } from "react";
 import Queue from "./templatePieces/Queue";
 import TitlebarButton from "./templatePieces/TitlebarButton";
+import { ErrorProvider } from "../context/Error";
+import { DialogProvider } from "../context/Dialog";
 
 interface BaseTemplateProps {
 	children: ReactNode;
@@ -48,7 +50,9 @@ export default function BaseTemplate({ children, title }: BaseTemplateProps) {
 				</div>
 			</div>
 			<main ref={mainRef} className="bg-primary w-screen grow overflow-y-auto text-primary flex flex-col relative">
-				{children}
+				<DialogProvider>
+					<ErrorProvider>{children}</ErrorProvider>
+				</DialogProvider>
 			</main>
 		</div>
 	);

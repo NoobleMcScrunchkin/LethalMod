@@ -13,7 +13,7 @@ export class Browser {
 		console.log("Dev:", config.isDev);
 
 		if (config.isDev) {
-			await session.defaultSession.loadExtension("C:/Users/riley/AppData/Local/Google/Chrome/User Data/Default/Extensions/jdkknkkbebbapilgoeccciglkfbmbnfm/4.9.0_0");
+			await session.defaultSession.loadExtension("C:/Users/riley/AppData/Local/Google/Chrome/User Data/Default/Extensions/jdkknkkbebbapilgoeccciglkfbmbnfm/4.11.0_0");
 			await session.defaultSession.loadExtension("C:/Users/riley/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/5.0.2_2");
 		}
 
@@ -51,7 +51,7 @@ export class Browser {
 			});
 		});
 
-		ModInstallerQueue.setCallBack((queue) => {
+		ModInstallerQueue.registerCallBack((queue) => {
 			try {
 				Browser.mainWindow.webContents.send("QUEUE_UPDATED", queue);
 			} catch (e) {

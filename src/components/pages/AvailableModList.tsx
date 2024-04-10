@@ -6,6 +6,9 @@ import { useThunderModsContext } from "../context/ThunderMods";
 import Button from "../Button";
 import TextInput from "../TextInput";
 import SelectInput from "../SelectInput";
+import { QueuePackageVersion } from "../../services/profile/modQueue";
+import { TryCatchReturnType } from "../../services/events/tryCatch";
+import { useErrorContext } from "../context/Error";
 
 const { shell, ipcRenderer } = window.require("electron");
 
@@ -104,11 +107,19 @@ function ModListItem({ pack, open, onClick, installOnClick }: { pack: Package; o
 }
 
 function InstallPackDialog({ installPack, clear }: { installPack: Package; clear: () => void }) {
+	const { setError } = useErrorContext();
 	const [versionToInstall, setVersionToInstall] = useState<Version>(installPack.versions[0]);
 
-	const handleInstall = () => {
+	const handleInstall = async () => {
 		if (installPack && versionToInstall) {
-			ipcRenderer.invoke("QUEUE_MOD", versionToInstall.full_name);
+			const data = (await ipcRenderer.invoke("QUEUE_MOD", versionToInstall.full_name)) as TryCatchReturnType<QueuePackageVersion[]>;
+
+			if (data.success === false) {
+				setError({ title: "Failed to add mods to queue", message: data.error.message });
+				console.error(data.error);
+				return;
+			}
+
 			clear();
 		}
 	};

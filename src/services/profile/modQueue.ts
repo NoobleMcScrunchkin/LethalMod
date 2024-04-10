@@ -11,8 +11,33 @@ import { config } from "@/util/config";
 import { extractAllTo } from "@/util/extract";
 import { Get_Mod_QueueQuery } from "@/__generated__/graphql";
 import { compareVersions } from "compare-versions";
+import { v4 } from "uuid";
+import { Browser } from "../browser";
 
 const { storagePath } = config.storage;
+
+const GET_VERSIONS = gql(`
+  query GET_VERSIONS($full_names: [String!] = []) {
+    versions(full_names: $full_names) {
+      packages {
+        name
+        full_name
+        dependencies
+        description
+        download_url
+				version_number
+				website_url
+        file_size
+        icon
+				package {
+					donation_link
+					categories
+				}
+      }
+      missing
+    }
+  }
+`);
 
 const GET_MOD_QUEUE = gql(`
   query GET_MOD_QUEUE($full_name: String!) {
@@ -37,15 +62,14 @@ const GET_MOD_QUEUE = gql(`
   }
 `);
 
-type QueuePackageVersion = Get_Mod_QueueQuery["dependencyList"]["packages"][number];
+export type QueuePackageVersion = Get_Mod_QueueQuery["dependencyList"]["packages"][number];
 
 class ModInstallerQueue {
 	static queue: Array<QueuePackageVersion> = [];
+	static failed: Array<QueuePackageVersion> = [];
 	static installing = false;
 
-	static callback: (queue: Array<QueuePackageVersion>) => void = () => {
-		return;
-	};
+	static callbacks: Record<string, (queue: Array<QueuePackageVersion>) => void> = {};
 
 	static async enqueue(...els: Array<QueuePackageVersion>) {
 		await Promise.all(
@@ -81,8 +105,16 @@ class ModInstallerQueue {
 		return ModInstallerQueue.queue.length !== 0 ? ModInstallerQueue.queue.shift() : "No executable element";
 	}
 
-	static setCallBack(callback: (queue: Array<QueuePackageVersion>) => void) {
-		ModInstallerQueue.callback = callback;
+	static registerCallBack(callback: (queue: Array<QueuePackageVersion>) => void): string {
+		const uuid = v4();
+
+		ModInstallerQueue.callbacks[uuid] = callback;
+
+		return uuid;
+	}
+
+	static destroyCallbck(uuid: string): void {
+		ModInstallerQueue.callbacks[uuid] = undefined;
 	}
 
 	static async addToQueueFromMod(full_name: string): Promise<Array<QueuePackageVersion>> {
@@ -90,7 +122,25 @@ class ModInstallerQueue {
 
 		await ModInstallerQueue.enqueue(...data.dependencyList.packages);
 
-		ModInstallerQueue.callback(ModInstallerQueue.queue);
+		Object.values(ModInstallerQueue.callbacks).forEach((callback) => {
+			callback(ModInstallerQueue.queue);
+		});
+
+		if (ModInstallerQueue.installing === false) {
+			ModInstallerQueue.startInstallingMods();
+		}
+
+		return ModInstallerQueue.queue;
+	}
+
+	static async addToQueueFromFullNames(full_names: Array<string>): Promise<Array<QueuePackageVersion>> {
+		const { data } = await client.query({ query: GET_VERSIONS, variables: { full_names } });
+
+		await ModInstallerQueue.enqueue(...data.versions.packages);
+
+		Object.values(ModInstallerQueue.callbacks).forEach((callback) => {
+			callback(ModInstallerQueue.queue);
+		});
 
 		if (ModInstallerQueue.installing === false) {
 			ModInstallerQueue.startInstallingMods();
@@ -107,12 +157,21 @@ class ModInstallerQueue {
 			if (current === "No executable element") {
 				break;
 			}
+			try {
+				await installMod(ProfileManager.currentProfile, current);
+			} catch (err) {
+				ModInstallerQueue.failed.push(current);
+			}
 
-			await installMod(ProfileManager.currentProfile, current);
-
-			ModInstallerQueue.callback(ModInstallerQueue.queue);
+			Object.values(ModInstallerQueue.callbacks).forEach((callback) => {
+				callback(ModInstallerQueue.queue);
+			});
 		}
 		ModInstallerQueue.installing = false;
+
+		Browser.mainWindow.webContents.send("FAILED_MODS", ModInstallerQueue.failed);
+
+		ModInstallerQueue.failed = [];
 	}
 }
 
@@ -130,19 +189,16 @@ async function installMod(profile: Profile, packageVersion: QueuePackageVersion)
 		await fs.rm(tempPath, { recursive: true });
 	}
 
-	let filePath = "";
+	const filePath = await downloadFile(packageVersion.download_url, tempPath);
 
-	let sizeDoesntMatch = true;
+	if (filePath === null) {
+		console.log("Failed downloading");
+		throw new Error(`Failed downloading`);
+	}
 
-	while (sizeDoesntMatch) {
-		filePath = await downloadFile(packageVersion.download_url, tempPath);
-
-		if (filePath === null) {
-			console.log("Failed downloading");
-			continue;
-		}
-
-		if ((await fs.stat(filePath)).size === packageVersion.file_size) sizeDoesntMatch = false;
+	if ((await fs.stat(filePath)).size === packageVersion.file_size) {
+		console.log("Failed downloading: File size mismatch");
+		throw new Error(`Failed downloading: File size mismatch`);
 	}
 
 	if (filePath.endsWith(".zip")) {
@@ -151,8 +207,7 @@ async function installMod(profile: Profile, packageVersion: QueuePackageVersion)
 		} catch (e) {
 			console.log(`Failed installing ${full_name}: Extracting failed`, e);
 
-			await fs.rm(tempPath, { recursive: true });
-			return false;
+			throw e;
 		}
 
 		await fs.unlink(filePath);
@@ -175,7 +230,12 @@ async function installMod(profile: Profile, packageVersion: QueuePackageVersion)
 						const newPath = path.join(bepinexProfilePath, file);
 						await fs.copyFile(currentPath, newPath);
 					} else {
-						const newPath = path.join(bepinexProfilePath, file, folderNameForFullName);
+						let newPath = "";
+						if (file === "config") {
+							newPath = path.join(bepinexProfilePath, file);
+						} else {
+							newPath = path.join(bepinexProfilePath, file, folderNameForFullName);
+						}
 						createDirIfNotExist(newPath);
 						await fs.cp(currentPath, newPath, { recursive: true });
 					}
@@ -230,6 +290,8 @@ async function installMod(profile: Profile, packageVersion: QueuePackageVersion)
 
 		createDirIfNotExist(path.join(profilePath, "BepInEx", "plugins", folderNameForFullName));
 		await fs.writeFile(path.join(profilePath, "BepInEx", "plugins", folderNameForFullName, "manifest.json"), JSON.stringify(newManifest));
+	} else {
+		throw new Error("Unknown mod type");
 	}
 
 	await fs.rm(tempPath, { recursive: true });

@@ -124,8 +124,8 @@ class ProfileManager {
 		return fromProfileSave(profileSave, profile.uuid);
 	}
 
-	static async getMods(search = "") {
-		const { uuid } = ProfileManager.currentProfile;
+	static async getMods(search = "", profile: Partial<Profile> = undefined) {
+		const { uuid } = profile ? profile : ProfileManager.currentProfile;
 
 		let mods: Array<ModManifestExtra> = [];
 

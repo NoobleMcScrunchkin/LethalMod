@@ -1,6 +1,8 @@
+import { TryCatchReturnType } from "../../services/events/tryCatch";
 import { ModManifestExtra } from "../../services/profile/types";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { useErrorContext } from "./Error";
 
 const { ipcRenderer } = window.require("electron");
 
@@ -11,6 +13,7 @@ const LocalModsContext = createContext<{
 } | null>(null);
 
 function LocalModsProvider({ children }: { children: ReactNode }) {
+	const { setError } = useErrorContext();
 	const [loading, setLoading] = useState(true);
 	const [packages, setPackages] = useState<Array<ModManifestExtra>>([]);
 	const [search, setSearch] = useState("");
@@ -19,14 +22,20 @@ function LocalModsProvider({ children }: { children: ReactNode }) {
 		getMods();
 	}, [search]);
 
-	const getMods = () => {
+	const getMods = async () => {
 		setLoading(true);
 
-		ipcRenderer.invoke("GET_MODS", search).then((mods: Array<ModManifestExtra>) => {
-			setPackages(mods);
+		const data = (await ipcRenderer.invoke("GET_MODS", search)) as TryCatchReturnType<ModManifestExtra[]>;
+
+		if (data.success === false) {
+			setError({ title: "Failed to get installed mods", message: data.error.message });
+			console.error(data.error);
+			return;
+		} else {
+			setPackages(data.result);
 
 			setLoading(false);
-		});
+		}
 	};
 
 	const handleUpdate = (search: string) => {

@@ -34,4 +34,19 @@ interface PackageVersion {
 	website_url: string;
 }
 
-export type { Profile, ModManifest, PackageVersion, ModManifestExtra };
+interface ExportMod {
+	name: string;
+	version: {
+		major: number;
+		minor: number;
+		patch: number;
+	};
+	enabled: boolean;
+}
+
+interface ExportYaml {
+	profileName: string;
+	mods: Array<ExportMod>;
+}
+
+export type { Profile, ModManifest, PackageVersion, ModManifestExtra, ExportYaml, ExportMod };
